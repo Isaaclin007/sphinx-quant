@@ -1,6 +1,7 @@
 import React, { PureComponent, Fragment } from 'react';
-import { Card, Button, DatePicker, Input, Select } from 'antd';
-import _ from 'lodash';
+import { connect } from 'dva';
+import { Card, Button, DatePicker, Input, Select, Spin } from 'antd';
+// import _ from 'lodash';
 import moment from 'moment';
 import AceEditor from 'react-ace';
 
@@ -20,21 +21,49 @@ const dateFormat = 'YYYY/MM/DD';
 
 // import styles from '../index.less';
 
-export default class Editor extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      code: '',
-    };
+@connect(({ strategy, loading }) => ({
+  strategy,
+  loading: loading.effects['strategy/getStrategyCode'],
+}))
+class Editor extends PureComponent {
+  componentDidMount() {
+    const { strategy, dispatch } = this.props;
+    const { currentStrategyDetail } = strategy;
+    const { strategy_code } = currentStrategyDetail;
+    dispatch({
+      type: 'strategy/getStrategyCode',
+      payload: {
+        id: strategy_code,
+      },
+    });
   }
 
-  onChange = code => this.setState({ code });
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'strategy/update',
+      payload: {
+        currentCodeText: '',
+      },
+    });
+  }
+
+  onChange = code => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'strategy/update',
+      payload: {
+        currentCodeText: code,
+      },
+    });
+  };
 
   editorDidMount = () => {};
 
   render() {
-    const { code } = this.state;
-    const { strategyID } = _.get(this, 'props.match.params', '');
+    const { strategy, loading } = this.props;
+    const { currentStrategyDetail, currentCodeText } = strategy;
+    const { name } = currentStrategyDetail;
     const action = (
       <Fragment>
         <span>
@@ -56,33 +85,38 @@ export default class Editor extends PureComponent {
         <Button type="primary">保存</Button>
       </Fragment>
     );
+    const editorTitle = <Input defaultValue={name || '新建策略'} />;
     return (
-      <PageHeaderWrapper action={action} title={strategyID || 'new'}>
+      <PageHeaderWrapper action={action} title={editorTitle}>
         <Card bordered={false} bodyStyle={{ padding: 0 }}>
-          <AceEditor
-            height="600px"
-            width="100%"
-            placeholder="SphinxQuant"
-            mode="python"
-            theme="monokai"
-            name="blah2"
-            onLoad={this.editorDidMount}
-            onChange={this.onChange}
-            fontSize={16}
-            showPrintMargin
-            showGutter
-            highlightActiveLine
-            value={code}
-            setOptions={{
-              enableBasicAutocompletion: true,
-              enableLiveAutocompletion: true,
-              enableSnippets: true,
-              showLineNumbers: true,
-              tabSize: 4,
-            }}
-          />
+          <Spin spinning={loading} delay={500}>
+            <AceEditor
+              height="600px"
+              width="100%"
+              placeholder="SphinxQuant"
+              mode="python"
+              theme="monokai"
+              name="blah2"
+              onLoad={this.editorDidMount}
+              onChange={this.onChange}
+              fontSize={14}
+              showPrintMargin
+              showGutter
+              highlightActiveLine
+              value={currentCodeText}
+              setOptions={{
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true,
+                showLineNumbers: true,
+                tabSize: 4,
+              }}
+            />
+          </Spin>
         </Card>
       </PageHeaderWrapper>
     );
   }
 }
+
+export default Editor;

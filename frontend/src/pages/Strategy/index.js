@@ -10,7 +10,7 @@ import styles from './index.less';
 
 @connect(({ strategy, loading }) => ({
   strategy,
-  loading: loading.effects['chart/fetch'],
+  loading: loading.effects['strategy/getStrategyList'],
 }))
 class StrategyList extends PureComponent {
   constructor(props) {
@@ -43,12 +43,15 @@ class StrategyList extends PureComponent {
         title: '操作',
         render: (_, record) => (
           <Fragment>
-            <a onClick={() => this.onEdit(record.id)} style={{ marginRight: 8 }}>
+            <a
+              onClick={() => this.onEdit({ strategyID: record.id, record })}
+              style={{ marginRight: 8 }}
+            >
               编辑
-            </a>{' '}
+            </a>
             <a onClick={() => this.onBacktestList(record.id)} style={{ marginRight: 8 }}>
               回测列表
-            </a>{' '}
+            </a>
             <a style={{ color: 'red' }}>删除</a>
           </Fragment>
         ),
@@ -63,7 +66,14 @@ class StrategyList extends PureComponent {
     });
   }
 
-  onEdit = strategyID => {
+  onEdit = async ({ strategyID, record }) => {
+    const { dispatch } = this.props;
+    await dispatch({
+      type: 'strategy/update',
+      payload: {
+        currentStrategyDetail: record,
+      },
+    });
     router.push(`/strategy/list/editor/${strategyID}`);
   };
 
@@ -72,18 +82,22 @@ class StrategyList extends PureComponent {
   };
 
   render() {
-    const { strategy } = this.props;
+    const { strategy, loading } = this.props;
     const { strategyList } = strategy;
     return (
       <PageHeaderWrapper title="策略列表">
         <Card bordered={false}>
           <div className={styles.tableList}>
             <div className={styles.tableListOperator}>
-              <Button icon="plus" type="primary" onClick={() => this.onEdit('')}>
+              <Button
+                icon="plus"
+                type="primary"
+                onClick={() => this.onEdit({ strategyID: '', record: {} })}
+              >
                 新建
               </Button>
             </div>
-            <Table dataSource={strategyList} columns={this.columns} />
+            <Table loading={loading} dataSource={strategyList} columns={this.columns} />
           </div>
         </Card>
       </PageHeaderWrapper>

@@ -1,6 +1,10 @@
-// import { stringify } from 'qs';
+import { stringify } from 'qs';
 import request from '@/utils/request';
 
-export default async function getStrategyList() {
+export async function getStrategyList() {
   return request('/api/strategy');
+}
+
+export async function getStrategyCode(params) {
+  return request(`/api/code?${stringify(params)}`);
 }

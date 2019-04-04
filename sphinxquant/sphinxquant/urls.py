@@ -21,6 +21,7 @@ from api import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^strategy', views.StrategyView.as_view()),
-    url(r'^backtest', views.BacktestView.as_view()),
+    url(r'^code', views.StrategyCodeView.as_view()),
+    url(r'^strategy', views.StrategyListView.as_view()),
+    url(r'^backtest', views.BacktestListView.as_view()),
 ]
