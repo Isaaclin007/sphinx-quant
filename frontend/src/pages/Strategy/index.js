@@ -1,34 +1,20 @@
 import React, { PureComponent, Fragment } from 'react';
+import moment from 'moment';
 import { Card, Button, Table } from 'antd';
+import { connect } from 'dva';
 import router from 'umi/router';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import { STRATEGY_TYPE } from '@/utils/const';
 
 import styles from './index.less';
 
-export default class StrategyList extends PureComponent {
+@connect(({ strategy, loading }) => ({
+  strategy,
+  loading: loading.effects['chart/fetch'],
+}))
+class StrategyList extends PureComponent {
   constructor(props) {
     super(props);
-
-    this.mockData = [
-      {
-        id: 1,
-        name: '双均线策略',
-        desc: '',
-        backtestTimes: 10,
-        type: 'stock',
-        status: 'init',
-        createdAt: '2019-04-01 15:30',
-      },
-      {
-        id: 2,
-        name: 'Dual Trust',
-        desc: '经典的趋势跟踪系统',
-        backtestTimes: 88,
-        type: 'futures',
-        status: 'init',
-        createdAt: '2019-04-01 15:45',
-      },
-    ];
     this.columns = [
       {
         title: '策略名称',
@@ -36,24 +22,22 @@ export default class StrategyList extends PureComponent {
       },
       {
         title: '描述',
-        dataIndex: 'desc',
+        dataIndex: 'description',
       },
       {
         title: '回测次数',
-        dataIndex: 'backtestTimes',
+        dataIndex: 'bt_length',
       },
       {
         title: '类型',
         dataIndex: 'type',
-      },
-      {
-        title: '状态',
-        dataIndex: 'status',
+        render: t => STRATEGY_TYPE[t],
       },
       {
         title: '创建时间',
-        dataIndex: 'createdAt',
+        dataIndex: 'created_at',
         sorted: true,
+        render: time => moment(time).format('YYYY-MM-DD HH:mm:ss'),
       },
       {
         title: '操作',
@@ -72,6 +56,13 @@ export default class StrategyList extends PureComponent {
     ];
   }
 
+  componentDidMount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'strategy/getStrategyList',
+    });
+  }
+
   onEdit = strategyID => {
     router.push(`/strategy/list/editor/${strategyID}`);
   };
@@ -81,6 +72,8 @@ export default class StrategyList extends PureComponent {
   };
 
   render() {
+    const { strategy } = this.props;
+    const { strategyList } = strategy;
     return (
       <PageHeaderWrapper title="策略列表">
         <Card bordered={false}>
@@ -90,10 +83,12 @@ export default class StrategyList extends PureComponent {
                 新建
               </Button>
             </div>
-            <Table dataSource={this.mockData} columns={this.columns} />
+            <Table dataSource={strategyList} columns={this.columns} />
           </div>
         </Card>
       </PageHeaderWrapper>
     );
   }
 }
+
+export default StrategyList;
